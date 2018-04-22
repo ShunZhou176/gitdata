@@ -2,3 +2,5 @@ logs/
 gitdata/
 *.xml
 *.pyc
+.idea/
+*.log
