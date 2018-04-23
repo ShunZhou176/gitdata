@@ -105,7 +105,10 @@ class ApiRequst(object):
                 if self.is_resp_fail(resp, api):
                     is_failed = True
                     break
-            res.extend(resp.json())
+            if isinstance(resp.json(), list):
+                res.extend(resp.json())
+            else:
+                res.append(resp.json())
             new_time = time.time()
             call_count += 1
             speed = call_count / (new_time - start_time)
@@ -114,6 +117,8 @@ class ApiRequst(object):
                 self.logger_.warning("too quick, wait: " + str(wait_time))
                 time.sleep(wait_time)
             page += 1
+            if api == 'community/profile':
+                break
             if call_count % 20 == 0:
                 self.logger_.info(self.repo_ + '/' + api + ':' + str(call_count))
         if not is_failed:
