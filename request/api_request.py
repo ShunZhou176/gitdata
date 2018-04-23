@@ -32,8 +32,11 @@ class ApiRequst(object):
         url = self.git_api_path_ + '/' + self.repo_ + '/' +  api + '?page=' + str(page) + '&per_page=' + str(page_size)
         return url
 
-    def get_header(self, token):
-        header = {'Accept': 'application/vnd.github.v3.star+json', 'Authorization': 'token ' + token}
+    def get_header(self, token, api):
+        if api == 'community/profile':
+            header =  {'Accept': 'application/vnd.github.black-panther-preview+json', 'Authorization': 'token ' + token}
+        else:
+            header = {'Accept': 'application/vnd.github.v3.star+json', 'Authorization': 'token ' + token}
         return header
 
     def is_resp_fail(self, resp, api):
@@ -86,7 +89,7 @@ class ApiRequst(object):
         is_failed = False
         res = []
         page = 1
-        header = self.get_header(token)
+        header = self.get_header(token, api)
         while True:
             resp = self.run_api(api, page, header)
             if self.is_end(resp):
