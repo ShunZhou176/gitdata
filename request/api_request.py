@@ -53,7 +53,6 @@ class ApiRequst(object):
     def run_api(self, api, page, header):
         url = self.get_url(api, page, 100)
         resp = requests.get(url, headers=header)
-        self.logger_.info("Get resp")
         return resp
 
     def save_res(self, res, api):
@@ -112,7 +111,7 @@ class ApiRequst(object):
                 self.logger_.warning("too quick, wait: " + str(wait_time))
                 time.sleep(wait_time)
             page += 1
-            if call_count % 5 == 0:
+            if call_count % 20 == 0:
                 self.logger_.info(self.repo_ + '/' + api + ':' + str(call_count))
         if not is_failed:
             self.save_res(res, api)
