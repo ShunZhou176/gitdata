@@ -23,10 +23,75 @@ class ApiRequst(object):
         self.attrs_ = {}
         self.finished_ = {}
         self.logger_ = logging.getLogger(__name__)
+        self.api_function_ = {
+            "forks": self.get_forks,
+            "subscribers": self.get_subscribers,
+            "stargazers": self.get_stargazers,
+            "commits": self.get_commits,
+            "pulls": self.get_pulls,
+            "issues": self.get_issues,
+            "community/profile": self.get_profile,
+            "tags": self.get_tags,
+            "branches": self.get_branches,
+            "comments": self.get_comments,
+        }
         for api in apis:
             self.apis_.append(api[0])
             self.attrs_[api[0]] = api[1]
             self.finished_[api[0]] = False
+
+    def get_forks(self, item):
+        res = {"created_at" : item["created_at"],
+               "updated_at": item["updated_at"],
+               "pushed_at": item["pushed_at"]}
+        return res
+
+    def get_subscribers(self, item):
+        res = {"id": item["id"]}
+        return res
+
+    def get_stargazers(self, item):
+        res = {"starred_at": item["starred_at"]}
+        return res
+
+    def get_commits(self, item):
+        res = {"sha": item["sha"],
+               "author": item["commit"]["author"],
+               "committer": item["commit"]["committer"]}
+        return res
+
+    def get_pulls(self, item):
+        res = {"state": item["state"],
+               "created_at": item["created_at"],
+               "closed_at": item["closed_at"],
+               "merged_at": item["merged_at"]}
+        return res
+
+    def get_issues(self, item):
+        res = {"state": item["state"],
+               "created_at": item["created_at"],
+               "updated_at": item["updated_at"],
+               "closed_at": item["closed_at"]}
+        return res
+
+    def get_profile(self, item):
+        res = {"health_percentage": item["health_percentage"],
+               "files": item["files"]}
+        return res
+
+    def get_tags(self, item):
+        res = {"name": item["name"],
+               "sha": item["commit"]["sha"]}
+        return res
+
+    def get_branches(self, item):
+        res = item
+        return res
+
+    def get_comments(self, item):
+        res = {"created_at": item["created_at"],
+               "updated_at": item["updated_at"]}
+        return res
 
     def get_url(self, api, page, page_size):
         url = self.git_api_path_ + '/' + self.repo_ + '/' +  api + '?page=' + str(page) + '&per_page=' + str(page_size)
@@ -65,15 +130,9 @@ class ApiRequst(object):
             os.mkdir('gitdata/' + self.repo_saved_)
         file_name = 'gitdata/' + self.repo_saved_ + '/' + api.replace('/', '_') + '.txt'
         with open(file_name, 'w') as f:
-            attr = self.attrs_[api]
-            if len(attr) != 0:
-                for item in res:
-                    todo = json.dumps(item[attr])
-                    f.write(todo + '\n')
-            else:
-                for item in res:
-                    todo = json.dumps(item)
-                    f.write(todo + '\n')
+            for item in res:
+                todo = json.dumps(item)
+                f.write(todo + '\n')
 
     def run_api_helper(self, api, token):
         file_name = 'gitdata/' + self.repo_saved_ + '/' + api.replace('/', '_') + '.txt'
@@ -105,10 +164,11 @@ class ApiRequst(object):
                 if self.is_resp_fail(resp, api):
                     is_failed = True
                     break
+            fuc = self.api_function_[api]
             if isinstance(resp.json(), list):
-                res.extend(resp.json())
+                res.extend([fuc(item) for item in resp.json()])
             else:
-                res.append(resp.json())
+                res.append(fuc(resp.json()))
             new_time = time.time()
             call_count += 1
             speed = call_count / (new_time - start_time)
@@ -119,7 +179,7 @@ class ApiRequst(object):
             page += 1
             if api == 'community/profile':
                 break
-            if call_count % 20 == 0:
+            if call_count % 1 == 0:
                 self.logger_.info(self.repo_ + '/' + api + ':' + str(call_count))
         if not is_failed:
             self.save_res(res, api)
