@@ -53,6 +53,7 @@ class ApiRequst(object):
     def run_api(self, api, page, header):
         url = self.get_url(api, page, 100)
         resp = requests.get(url, headers=header)
+        self.logger_.info("Get resp")
         return resp
 
     def save_res(self, res, api):
@@ -60,7 +61,7 @@ class ApiRequst(object):
             os.mkdir('gitdata')
         if not os.path.exists('gitdata/' + self.repo_saved_):
             os.mkdir('gitdata/' + self.repo_saved_)
-        file_name = 'gitdata/' + self.repo_saved_ + '/' + api + '.txt'
+        file_name = 'gitdata/' + self.repo_saved_ + '/' + api.replace('/', '_') + '.txt'
         with open(file_name, 'w') as f:
             attr = self.attrs_[api]
             if len(attr) != 0:
@@ -73,7 +74,7 @@ class ApiRequst(object):
                     f.write(todo + '\n')
 
     def run_api_helper(self, api, token):
-        file_name = 'gitdata/' + self.repo_saved_ + '/' + api + '.txt'
+        file_name = 'gitdata/' + self.repo_saved_ + '/' + api.replace('/', '_') + '.txt'
         if os.path.exists(file_name):
             self.logger_.info(self.repo_saved_ + '/' + api + ' already in.')
             return
@@ -111,7 +112,7 @@ class ApiRequst(object):
                 self.logger_.warning("too quick, wait: " + str(wait_time))
                 time.sleep(wait_time)
             page += 1
-            if call_count % 100 == 0:
+            if call_count % 5 == 0:
                 self.logger_.info(self.repo_ + '/' + api + ':' + str(call_count))
         if not is_failed:
             self.save_res(res, api)
