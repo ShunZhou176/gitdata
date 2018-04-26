@@ -5,7 +5,7 @@ haproxy/haproxy
 apache/tomcat
 eclipse/jetty.project
 spring-projects/spring-framework
-/apache/httpd
+apache/httpd
 mybatis/ibatis-2
 mybatis/mybatis-3
 mybatis/mybatis-3
@@ -43,7 +43,7 @@ elastic/elasticsearch
 apache/httpcomponents-client
 jboss-modules/jboss-modules
 kiegroup/jbpm
-elastic/kibana h
+elastic/kibana
 elastic/logstash
 nodejs/node
 spring-projects/spring-boot
