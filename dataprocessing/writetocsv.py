@@ -1,0 +1,102 @@
+# coding=utf-8
+from __future__ import division
+
+import os
+import json
+import pandas as pd
+
+
+# 统计每月的出现频率
+def get_nums_month(timestamp_list):  # timestamp_list为包含一组时间戳的列表，例如2018-04-16T15:40:32Z
+    nums_month = {}
+    for line in timestamp_list:
+        month = line[0:7]
+        if not nums_month.has_key(month):
+            nums_month[month] = 1
+        else:
+            nums_month[month] += 1
+    return sorted([[k, nums_month[k]] for k in nums_month], key=lambda x: x[0], reverse=True)
+
+
+#统计每季度的出现频率
+def get_nums_quart(timestamp_list):#timestamp_list为包含一组时间戳的列表，例如2018-04-16T15:40:32Z
+    nums_quart = {}
+    for line in timestamp_list:
+        m = int(line[5:7])
+        y = line[0:4]
+        if m < 4:
+            quart = y + 'q1'
+        elif m < 7:
+            quart = y + 'q2'
+        elif m < 10:
+            quart = y + 'q3'
+        else:
+            quart = y + 'q4'
+        if nums_quart.has_key(quart) == False:
+            nums_quart[quart] = 1
+        else:
+            nums_quart[quart] += 1
+    return sorted([[k, nums_quart[k]] for k in nums_quart], key = lambda x:x[0], reverse=True)
+
+
+#统计每年的出现频率
+def get_nums_year(timestamp_list):#timestamp_list为包含一组时间戳的列表，例如2018-04-16T15:40:32Z
+    nums_year = {}
+    for line in timestamp_list:
+        year = line[0:4]
+        if nums_year.has_key(year) == False:
+            nums_year[year] = 1
+        else:
+            nums_year[year] += 1
+    return sorted([[k, nums_year[k]] for k in nums_year], key = lambda x:x[0], reverse=True)
+
+
+#计算环比增量，date_num_list格式为[date,num]
+#时间顺序为由近到远
+def get_increment_chain(date_num_list):
+    increment_list = []
+    for i in range(len(date_num_list)-1):
+        increment = date_num_list[i][1] - date_num_list[i + 1][1]
+        increment_list.append([date_num_list[i][0],increment])
+    increment_list.append([date_num_list[i+1][0],0])#最后一条数据增量为0
+    return increment_list
+
+
+#计算环比增长率，date_num_list格式为[date,num]
+#时间顺序为由近到远
+def get_increment_ratio_chain(date_num_list):
+    ratio_list = []
+    for i in range(len(date_num_list)-1):
+        increment = float(date_num_list[i][1] - date_num_list[i + 1][1])
+        ratio = increment/date_num_list[i + 1][1]
+        ratio_list.append([date_num_list[i][0],ratio])
+    ratio_list.append([date_num_list[i+1][0],0])#最后一条数据增长率为0
+    return ratio_list
+
+
+#计算环比增量和变化率
+def get_increment(date_num_list):
+    data_list = []
+    for i in range(len(date_num_list)-1):
+        increment = date_num_list[i][1] - date_num_list[i + 1][1]
+        ratio = increment/date_num_list[i + 1][1]
+        data_list.append([date_num_list[i][0],date_num_list[i][1],increment,ratio])
+    data_list.append([date_num_list[i+1][0],date_num_list[i+1][1],0,0])#最后一条数据增量和变化率为0
+    return data_list
+
+
+path = 'D:/githubdata'
+fs = os.listdir(path)
+for fdir in fs:
+    name = 'forks'
+    if fdir != 'gitdata':
+        with open(path + '/' + fdir + '/' + name + '.txt', 'r') as f:
+            data = []
+            for line in f.readlines():
+                data.append(json.loads(line)['created_at'])
+        month_list = get_nums_month(data)
+        increment_list = get_increment(month_list)
+        head = ['date', 'nums', 'increment', 'ratio']
+        df = pd.DataFrame(increment_list, columns=head)
+        df.to_csv(path + '/' + fdir + '/' + name + '_ratio.txt')
+
