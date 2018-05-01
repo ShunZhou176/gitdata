@@ -35,10 +35,28 @@ class ApiRequst(object):
             "branches": self.get_branches,
             "comments": self.get_comments,
         }
+        self.api_url_function_ ={
+            "pulls": self.pulls_url,
+            "issues": self.issues_url,
+        }
         for api in apis:
             self.apis_.append(api[0])
             self.attrs_[api[0]] = api[1]
             self.finished_[api[0]] = False
+
+    def pulls_url(self):
+        '''
+        https://developer.github.com/v3/pulls/#list-pull-requests
+        '''
+        return '&state=all'
+
+
+    def issues_url(self):
+        '''
+        https://developer.github.com/v3/issues/#list-issues-for-a-repository
+        '''
+        return '&state=all'
+
 
     def get_forks(self, item):
         res = {"created_at" : item["created_at"],
@@ -94,8 +112,11 @@ class ApiRequst(object):
         return res
 
     def get_url(self, api, page, page_size):
-        url = self.git_api_path_ + '/' + self.repo_ + '/' +  api + '?page=' + str(page) + '&per_page=' + str(page_size)
-        return url
+        base_url = self.git_api_path_ + '/' + self.repo_ + '/' +  api + '?page=' + str(page) + '&per_page=' + str(page_size)
+        append_resource = ''
+        if api in self.api_url_function_:
+            append_resource = self.api_url_function_[api]()
+        return base_url + append_resource
 
     def get_header(self, token, api):
         if api == 'community/profile':
