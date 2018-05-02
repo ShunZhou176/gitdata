@@ -119,8 +119,8 @@ def get_all_software_year_stat(path, outpath, attr):
 attr_list = ['stargazers','forks','comments','commits','issues','pulls']
 #path = '/Users/JDN/data'  # path 读取数据文件路径
 #outpath = '/Users/JDN/stat'  # outpath 输出文件路径
-path = 'D:/githubdata'
-outpath = 'D:/stat'
+path = '/Users/JDN/Downloads/githubdata'
+outpath = './stat'
 for attr in attr_list:
     get_all_software_month_stat(path,outpath,attr)
     get_all_software_year_stat(path,outpath,attr)
