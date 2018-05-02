@@ -64,120 +64,63 @@ def get_increment(date_num_list):
     return data_list
 
 
+def read_json(attr,line):
+    if attr == 'stargazers':
+        return json.loads(line)['starred_at']
+    if attr == 'forks':
+        return json.loads(line)['created_at']
+    if attr == 'comments':
+        return json.loads(line)['created_at']
+    if attr == 'commits':
+        return json.loads(line)['committer']['date']
+    if attr == 'issues':
+        return json.loads(line)['created_at']
+    if attr == 'pulls':
+        return json.loads(line)['created_at']
 
-def get_all_stargazers_stat(path, outpath):
-    name = 'stargazers'
+
+
+def get_all_software_month_stat(path, outpath, attr):
     fs = os.listdir(path)
-    if not os.path.exists(outpath + '/' + name):  # 输出文件夹若不存在则新建一个
-        os.mkdir(outpath + '/' + name)
     for fdir in fs:
         print fdir
         data = []
+        if not os.path.exists(outpath + '/' + fdir):  # 输出文件夹若不存在则新建一个
+            os.mkdir(outpath + '/' + fdir)
         if '.DS_Store' not in fdir:
-            with open(path + '/' + fdir + '/' + name + '.txt', 'r') as f:
+            with open(path + '/' + fdir + '/' + attr + '.txt', 'r') as f:
                 for line in f.readlines():
-                    data.append(json.loads(line)['starred_at'])  # 读取时间戳列表
-            month_list = get_nums_month(data)
-            increment_list = get_increment(month_list)
+                    data.append(read_json(attr,line))  # 读取时间戳列表
+            year_list = get_nums_month(data)
+            increment_list = get_increment(year_list)
             head = ['date', 'nums', 'increment', 'ratio']
             df = pd.DataFrame(increment_list, columns=head)
-            df.to_csv(outpath + '/' + name + '/' + fdir + '.txt')
+            df.to_csv(outpath + '/' + fdir + '/' + attr + '_month.txt')
 
 
-def get_all_forks_stat(path, outpath):  # 遍历所有软件文件夹下的forks文件，计算统计量，输出到单独的文件夹下
-    name = 'forks'
+def get_all_software_year_stat(path, outpath, attr):
     fs = os.listdir(path)
-    if not os.path.exists(outpath + '/' + name):  # 输出文件夹若不存在则新建一个
-        os.mkdir(outpath + '/' + name)
     for fdir in fs:
         print fdir
         data = []
+        if not os.path.exists(outpath + '/' + fdir):  # 输出文件夹若不存在则新建一个
+            os.mkdir(outpath + '/' + fdir)
         if '.DS_Store' not in fdir:
-            with open(path + '/' + fdir + '/' + name + '.txt', 'r') as f:
+            with open(path + '/' + fdir + '/' + attr + '.txt', 'r') as f:
                 for line in f.readlines():
-                    data.append(json.loads(line)['created_at'])  # 读取时间戳列表
-            month_list = get_nums_month(data)
-            increment_list = get_increment(month_list)
+                    data.append(read_json(attr,line))  # 读取时间戳列表
+            year_list = get_nums_year(data)
+            increment_list = get_increment(year_list)
             head = ['date', 'nums', 'increment', 'ratio']
             df = pd.DataFrame(increment_list, columns=head)
-            df.to_csv(outpath + '/' + name + '/' + fdir + '.txt')
+            df.to_csv(outpath + '/' + fdir + '/' + attr + '_year.txt')
 
 
-def get_all_comments_stat(path, outpath):
-    name = 'comments'
-    fs = os.listdir(path)
-    if not os.path.exists(outpath + '/' + name):  # 输出文件夹若不存在则新建一个
-        os.mkdir(outpath + '/' + name)
-    for fdir in fs:
-        print fdir
-        data = []
-        if '.DS_Store' not in fdir:
-            with open(path + '/' + fdir + '/' + name + '.txt', 'r') as f:
-                for line in f.readlines():
-                    data.append(json.loads(line)['created_at'])  # 读取时间戳列表
-            month_list = get_nums_month(data)
-            increment_list = get_increment(month_list)
-            head = ['date', 'nums', 'increment', 'ratio']
-            df = pd.DataFrame(increment_list, columns=head)
-            df.to_csv(outpath + '/' + name + '/' + fdir + '.txt')
-
-
-def get_all_commits_stat(path, outpath):
-    name = 'commits'
-    fs = os.listdir(path)
-    if not os.path.exists(outpath + '/' + name):  # 输出文件夹若不存在则新建一个
-        os.mkdir(outpath + '/' + name)
-    for fdir in fs:
-        print fdir
-        data = []
-        if '.DS_Store' not in fdir:
-            with open(path + '/' + fdir + '/' + name + '.txt', 'r') as f:
-                for line in f.readlines():
-                    data.append(json.loads(line)['committer']['date'])  # 读取时间戳列表
-            month_list = get_nums_month(data)
-            increment_list = get_increment(month_list)
-            head = ['date', 'nums', 'increment', 'ratio']
-            df = pd.DataFrame(increment_list, columns=head)
-            df.to_csv(outpath + '/' + name + '/' + fdir + '.txt')
-
-def get_all_issues_stat(path, outpath):
-    name = 'issues'
-    fs = os.listdir(path)
-    if not os.path.exists(outpath + '/' + name):  # 输出文件夹若不存在则新建一个
-        os.mkdir(outpath + '/' + name)
-    for fdir in fs:
-        print fdir
-        data = []
-        if '.DS_Store' not in fdir:
-            with open(path + '/' + fdir + '/' + name + '.txt', 'r') as f:
-                for line in f.readlines():
-                    data.append(json.loads(line)['created_at'])  # 读取时间戳列表
-            month_list = get_nums_month(data)
-            increment_list = get_increment(month_list)
-            head = ['date', 'nums', 'increment', 'ratio']
-            df = pd.DataFrame(increment_list, columns=head)
-            df.to_csv(outpath + '/' + name + '/' + fdir + '.txt')
-
-
-def get_all_pulls_stat(path, outpath):
-    name = 'pulls'
-    fs = os.listdir(path)
-    if not os.path.exists(outpath + '/' + name):  # 输出文件夹若不存在则新建一个
-        os.mkdir(outpath + '/' + name)
-    for fdir in fs:
-        print fdir
-        data = []
-        if '.DS_Store' not in fdir:
-            with open(path + '/' + fdir + '/' + name + '.txt', 'r') as f:
-                for line in f.readlines():
-                    data.append(json.loads(line)['created_at'])  # 读取时间戳列表
-            month_list = get_nums_month(data)
-            increment_list = get_increment(month_list)
-            head = ['date', 'nums', 'increment', 'ratio']
-            df = pd.DataFrame(increment_list, columns=head)
-            df.to_csv(outpath + '/' + name + '/' + fdir + '.txt')
-
-
-path = '/Users/JDN/data'  # path 读取数据文件路径
-outpath = '/Users/JDN/stat'  # outpath 输出文件路径
-get_all_pulls_stat(path,outpath)
+attr_list = ['stargazers','forks','comments','commits','issues','pulls']
+#path = '/Users/JDN/data'  # path 读取数据文件路径
+#outpath = '/Users/JDN/stat'  # outpath 输出文件路径
+path = 'D:/githubdata'
+outpath = 'D:/stat'
+for attr in attr_list:
+    get_all_software_month_stat(path,outpath,attr)
+    get_all_software_year_stat(path,outpath,attr)
