@@ -3,8 +3,8 @@
 #@Filename : main
 #@Date : 2018-04-21-22-18
 #@AUTHOR : bai
-from request.token_pool import global_token_pool
-from request.api_request import ApiRequst
+from request.worker_pool import global_worker_pool
+from request.api_request import ApiRequest
 from threading import Thread
 import argparse
 import logging
@@ -46,7 +46,7 @@ def setup_logging(
 
     """
     if not os.path.exists(log_directory):
-	os.mkdir(log_directory)
+        os.mkdir(log_directory)
     path = default_path
     value = os.getenv(env_key, None)
     if value:
@@ -63,18 +63,18 @@ def main(token_path, api_path, software_path):
     setup_logging()
     logger = logging.getLogger(__name__)
     tokens = get_tokens(token_path)
-    global_token_pool.Init(tokens)
+    global_worker_pool.init(tokens=tokens)
 
     apis = get_apis(api_path)
     softwares = get_softwares(software_path)
 
     api_requests = []
     for s in softwares:
-        req = ApiRequst(s, apis)
+        req = ApiRequest(s, apis)
         api_requests.append(req)
     threads = []
     for api in api_requests:
-        t = Thread(target=api.RunAll, args=[global_token_pool])
+        t = Thread(target=api.RunAll)
         threads.append(t)
         t.start()
 

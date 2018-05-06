@@ -9,21 +9,22 @@ import time
 import os
 import json
 import logging
+from worker_pool import global_worker_pool
 
-class ApiRequst(object):
+
+class ApiRequest(object):
     def __init__(self, repo, apis):
         self.git_api_path_ = "https://api.github.com/repos"
         self.repo_ = repo
         self.repo_saved_ = repo.replace('/', '_')
-        self.auth_limit_ = 5000
-        self.common_limit_ = 100
         self.is_auth_ = False
         self.apis_ = []
         self.failed_codes_ = {}
         self.attrs_ = {}
         self.finished_ = {}
         self.logger_ = logging.getLogger(__name__)
-        self.api_function_ = {
+        self.api_runner_ = {}
+        self.api_extract_function_ = {
             "forks": self.get_forks,
             "subscribers": self.get_subscribers,
             "stargazers": self.get_stargazers,
@@ -44,6 +45,9 @@ class ApiRequst(object):
             self.attrs_[api[0]] = api[1]
             self.finished_[api[0]] = False
 
+
+    # -------------------------------------------------
+    # Api url function begin.
     def pulls_url(self):
         '''
         https://developer.github.com/v3/pulls/#list-pull-requests
@@ -56,60 +60,92 @@ class ApiRequst(object):
         https://developer.github.com/v3/issues/#list-issues-for-a-repository
         '''
         return '&state=all'
+    # Api url function end.
+    # -------------------------------------------------
 
 
-    def get_forks(self, item):
-        res = {"created_at" : item["created_at"],
-               "updated_at": item["updated_at"],
-               "pushed_at": item["pushed_at"]}
-        return res
+    # -------------------------------------------------
+    # Api result extractor function begin.
 
-    def get_subscribers(self, item):
-        res = {"id": item["id"]}
-        return res
+    def get_forks(self, items, **kwargs):
+        def get_fork_(item):
+            return {"created_at" : item["created_at"],
+                    "updated_at": item["updated_at"],
+                    "pushed_at": item["pushed_at"]}
+        return [get_fork_(item) for item in items]
 
-    def get_stargazers(self, item):
-        res = {"starred_at": item["starred_at"]}
-        return res
+    def get_subscribers(self, items, **kwargs):
+        def get_subscriber_(item):
+            return {"id": item["id"]}
+        return [get_subscriber_(item) for item in items]
 
-    def get_commits(self, item):
-        res = {"sha": item["sha"],
-               "author": item["commit"]["author"],
-               "committer": item["commit"]["committer"]}
-        return res
+    def get_stargazers(self, items, **kwargs):
+        def get_stargazer_(item):
+            return {"starred_at": item["starred_at"]}
+        return [get_stargazer_(item) for item in items]
 
-    def get_pulls(self, item):
+    def get_commits(self, items, **kwargs):
+        def get_commit_(item):
+            return {"sha": item["sha"],
+                    "author": item["commit"]["author"],
+                    "committer": item["commit"]["committer"]}
+        return [get_commit_(item) for item in items]
+
+    def get_pulls(self, item, **kwargs):
         res = {"state": item["state"],
                "created_at": item["created_at"],
                "closed_at": item["closed_at"],
                "merged_at": item["merged_at"]}
         return res
 
-    def get_issues(self, item):
-        res = {"state": item["state"],
-               "created_at": item["created_at"],
-               "updated_at": item["updated_at"],
-               "closed_at": item["closed_at"]}
+    def get_issues(self, items, **kwargs):
+        def get_issue_(item):
+            res = {"state": item["state"],
+                   "created_at": item["created_at"],
+                   "updated_at": item["updated_at"],
+                   "closed_at": item["closed_at"]}
+            return res
+        return [get_issue_(item) for item in items]
+
+    def get_profile(self, items, **kwargs):
+        def get_profile_(item):
+            res = {"health_percentage": item["health_percentage"],
+                   "files": item["files"]}
+            return res
+        return [get_profile_(item) for item in items]
+
+    def get_tags(self, items, **kwargs):
+        def get_tag_(item, worker):
+            res = {"name": item["name"]}
+            commit_url = item["commit"]['url']
+            header = self.get_header('commits')
+            is_failed, resp = is_failed, resp = worker.run_api(commit_url, header)
+            if not is_failed:
+                res = {
+                    "name": item["name"],
+                    "date": resp.json()['commit']['committer']['date']
+                }
+            else:
+                res = {
+                    "name": item["name"],
+                    "date": ''
+                }
+            return res
+        return [get_tag_(item, kwargs['worker']) for item in items]
+
+    def get_branches(self, items, **kwargs):
+        res = items
         return res
 
-    def get_profile(self, item):
-        res = {"health_percentage": item["health_percentage"],
-               "files": item["files"]}
-        return res
+    def get_comments(self, items, **kwargs):
+        def get_comment_(item):
+            res = {"created_at": item["created_at"],
+                   "updated_at": item["updated_at"]}
+            return res
+        return [get_comment_(item) for item in items]
 
-    def get_tags(self, item):
-        res = {"name": item["name"],
-               "sha": item["commit"]["sha"]}
-        return res
-
-    def get_branches(self, item):
-        res = item
-        return res
-
-    def get_comments(self, item):
-        res = {"created_at": item["created_at"],
-               "updated_at": item["updated_at"]}
-        return res
+    # Api result extractor function end.
+    # -------------------------------------------------
 
     def get_url(self, api, page, page_size):
         base_url = self.git_api_path_ + '/' + self.repo_ + '/' +  api + '?page=' + str(page) + '&per_page=' + str(page_size)
@@ -118,19 +154,13 @@ class ApiRequst(object):
             append_resource = self.api_url_function_[api]()
         return base_url + append_resource
 
-    def get_header(self, token, api):
+    def get_header(self, api):
         if api == 'community/profile':
-            header =  {'Accept': 'application/vnd.github.black-panther-preview+json', 'Authorization': 'token ' + token}
+            header =  {'Accept': 'application/vnd.github.black-panther-preview+json', 'Authorization': 'token ' + '{0}'}
         else:
-            header = {'Accept': 'application/vnd.github.v3.star+json', 'Authorization': 'token ' + token}
+            header = {'Accept': 'application/vnd.github.v3.star+json', 'Authorization': 'token ' + '{0}'}
         return header
 
-    def is_resp_fail(self, resp, api):
-        if resp.status_code != 200 and resp.status_code != 422:
-            self.logger_.info("Failed with status code " + str(resp.status_code))
-            return True
-        else:
-            return False
 
     def is_end(self, resp):
         if resp.status_code == 422 or (resp.status_code == 200 and resp.json() == []):
@@ -138,11 +168,6 @@ class ApiRequst(object):
             return True
         else:
             return False
-
-    def run_api(self, api, page, header):
-        url = self.get_url(api, page, 100)
-        resp = requests.get(url, headers=header)
-        return resp
 
     def save_res(self, res, api):
         if not os.path.exists('gitdata'):
@@ -155,70 +180,47 @@ class ApiRequst(object):
                 todo = json.dumps(item)
                 f.write(todo + '\n')
 
-    def run_api_helper(self, api, token):
+    def run_api_helper(self, api):
         file_name = 'gitdata/' + self.repo_saved_ + '/' + api.replace('/', '_') + '.txt'
         if os.path.exists(file_name):
             self.logger_.info(self.repo_saved_ + '/' + api + ' already in.')
             return
-        if len(token) != 0:
-            speed_limit = self.auth_limit_ / (60.0 * 60.0)
-        else:
-            speed_limit = self.common_limit_ / (60.0 * 60.0)
-        call_count = 0
-        start_time = time.time()
-        is_failed = False
         res = []
         page = 1
-        header = self.get_header(token, api)
+        header = self.get_header(api)
+        worker = global_worker_pool.get_worker()
         while True:
-            resp = self.run_api(api, page, header)
-            if self.is_end(resp):
+            url = self.get_url(api, page, 100)
+            is_failed, resp = worker.run_api(url, header)
+            if is_failed or self.is_end(resp):
                 break
-            # Retry server time
-            if self.is_resp_fail(resp, api):
-                retry_time = 5
-                while self.is_resp_fail(resp, api) and retry_time > 0:
-                    time.sleep(5)
-                    retry_time -= 1
-                    self.logger_.warning("retry: " + str(5 - retry_time))
-                    resp = self.run_api(api, page, header)
-                if self.is_resp_fail(resp, api):
-                    is_failed = True
-                    break
-            fuc = self.api_function_[api]
-            if isinstance(resp.json(), list):
-                res.extend([fuc(item) for item in resp.json()])
+            fuc = self.api_extract_function_[api]
+            if not isinstance(resp.json(), list):
+                res_list = [resp.json()]
             else:
-                res.append(fuc(resp.json()))
-            new_time = time.time()
-            call_count += 1
-            speed = call_count / (new_time - start_time)
-            if speed > speed_limit:
-                wait_time = call_count / speed_limit - (new_time - start_time)
-                self.logger_.warning("too quick, wait: " + str(wait_time))
-                time.sleep(wait_time)
+                res_list = resp.json()
+            res.extend(fuc(res_list, worker=worker))
             page += 1
+            if page % 1 == 0:
+                self.logger_.info(self.repo_ + '/' + api + ' page :' + str(page))
             if api == 'community/profile':
                 break
-            if call_count % 1 == 0:
-                self.logger_.info(self.repo_ + '/' + api + ':' + str(call_count))
+        global_worker_pool.return_worker(worker)
         if not is_failed:
             self.save_res(res, api)
             self.finished_[api] = True
         self.logger_.info(self.repo_ + '/' + api + ' finished.')
         return
 
-    def RunApi(self, api, token_pool):
-        token = token_pool.Get()
-        self.run_api_helper(api, token)
-        token_pool.Return(token)
-
-    def RunAll(self, token_pool):
+    def RunAll(self):
         if not self.apis_:
             return
         threads = []
         for api in self.apis_:
-            t = Thread(target=self.RunApi, args=(api, token_pool))
+            if api in self.api_runner_:
+                t = Thread(target=self.api_runner_[api])
+            else:
+                t = Thread(target=self.run_api_helper, args=[api])
             threads.append(t)
             t.start()
 
