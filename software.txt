@@ -18,7 +18,7 @@ mysql/mysql-server
 antirez/redis
 mongodb/mongo
 apache/hbase
-aopalliance/php
+php/php-src
 ubports/ubuntu-touch
 git/git
 openstack/openstack
