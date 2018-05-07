@@ -8,7 +8,7 @@ spring-projects/spring-framework
 apache/httpd
 mybatis/ibatis-2
 mybatis/mybatis-3
-mybatis/mybatis-3
+hibernate/hibernate-orm
 apache/hadoop-hdfs
 memcached/memcached
 alibaba/fastjson
