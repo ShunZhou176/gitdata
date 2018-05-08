@@ -85,18 +85,20 @@ class ApiRequest(object):
         return [get_stargazer_(item) for item in items]
 
     def get_commits(self, items, **kwargs):
-        def get_commit_(item):
+        def get_commit_(item, worker):
             return {"sha": item["sha"],
                     "author": item["commit"]["author"],
                     "committer": item["commit"]["committer"]}
-        return [get_commit_(item) for item in items]
+        return [get_commit_(item, kwargs["worker"]) for item in items]
 
-    def get_pulls(self, item, **kwargs):
-        res = {"state": item["state"],
-               "created_at": item["created_at"],
-               "closed_at": item["closed_at"],
-               "merged_at": item["merged_at"]}
-        return res
+    def get_pulls(self, items, **kwargs):
+        def get_pulls_(item):
+            res = {"state": item["state"],
+                   "created_at": item["created_at"],
+                   "closed_at": item["closed_at"],
+                   "merged_at": item["merged_at"]}
+            return res
+        return [get_pulls_(item) for item in items]
 
     def get_issues(self, items, **kwargs):
         def get_issue_(item):
@@ -119,7 +121,7 @@ class ApiRequest(object):
             res = {"name": item["name"]}
             commit_url = item["commit"]['url']
             header = self.get_header('commits')
-            is_failed, resp = is_failed, resp = worker.run_api(commit_url, header)
+            is_failed, resp = worker.run_api(commit_url, header)
             if not is_failed:
                 res = {
                     "name": item["name"],
