@@ -86,30 +86,32 @@ class ApiRequest(object):
 
     def get_commits(self, items, **kwargs):
         def get_commit_(item, worker):
-            author_url = item["author"]["url"]
-            header = self.get_header('users')
-            is_failed, resp = worker.run_api(author_url, header)
-            print is_failed
-            if not is_failed:
-                res = {
-                    "date": item["commit"]["author"]["date"],
-                    "company": resp.json()["company"],
-                    "public_repos": resp.json()["public_repos"],
-                    "public_gists": resp.json()["public_gists"],
-                    "followers": resp.json()["followers"],
-                    "user_created_at": resp.json()["created_at"]
-
-                }
-            else:
-                res = {
-                    "date": item["commit"]["author"]["date"],
-                    "company": '',
-                    "public_repos": '',
-                    "public_gists": '',
-                    "followers": '',
-                    "user_created_at": ''
-                }
-            return res
+            # author_url = item["author"]["url"]
+            # print author_url
+            # header = self.get_header('users')
+            # is_failed, resp = worker.run_api(author_url, header)
+            # if not is_failed:
+            #     res = {
+            #         "date": item["commit"]["author"]["date"],
+            #         "company": resp.json()["company"],
+            #         "public_repos": resp.json()["public_repos"],
+            #         "public_gists": resp.json()["public_gists"],
+            #         "followers": resp.json()["followers"],
+            #         "user_created_at": resp.json()["created_at"]
+            #
+            #     }
+            # else:
+            #     res = {
+            #         "date": item["commit"]["author"]["date"],
+            #         "company": '',
+            #         "public_repos": '',
+            #         "public_gists": '',
+            #         "followers": '',
+            #         "user_created_at": ''
+            #     }
+            #return res
+            return {"date": item["commit"]["author"]["date"],
+                    "author_url": item["author"]["url"]}
         return [get_commit_(item, kwargs["worker"]) for item in items]
 
     def get_pulls(self, items, **kwargs):
