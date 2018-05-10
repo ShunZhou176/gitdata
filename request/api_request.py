@@ -110,8 +110,9 @@ class ApiRequest(object):
             #         "user_created_at": ''
             #     }
             #return res
-            return {"date": item["commit"]["author"]["date"],
-                    "author_url": item["author"]["url"]}
+            print item["author"]["url"]
+            return {"author": item["commit"]["author"],
+                    "author_url": item["author"]["url"] if "author" in item else ""}
         return [get_commit_(item, kwargs["worker"]) for item in items]
 
     def get_pulls(self, items, **kwargs):

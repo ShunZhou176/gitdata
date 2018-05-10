@@ -92,43 +92,88 @@ def duration_mean(list):
 
 # 返回issues特征：
 # 关闭问题数量，开放问题数量，已关闭问题平均持续时间，开放问题平均持续时间，开放问题占比
-def issues_feature(path):# path为issues.txt存储地址
+def issues_feature(path):  # path为issues.txt存储地址
     closed_duration, open_duration = issues_duration_list(path)
-    closednums = len(closed_duration)
-    opennums = len(open_duration)
-    openratio = opennums / (opennums + closednums)
+    closed_NUMS = len(closed_duration)
+    open_NUMS = len(open_duration)
+    openratio = open_NUMS / (open_NUMS + closed_NUMS)
     closed_duration_MEAN = duration_mean(closed_duration)
     open_duration_MEAN = duration_mean(open_duration)
-    return closednums, opennums, closed_duration_MEAN, open_duration_MEAN, openratio
+    return closed_NUMS, open_NUMS, closed_duration_MEAN, open_duration_MEAN, openratio
 
 
 # 返回pulls特征：
 # 关闭请求数量，合并请求数量，开放请求数量，
 # 已关闭请求平均持续时间，已合并请求平均持续时间，开放请求平均持续时间，
 # 开放请求占比，合并请求占比,拉取请求系数
-def pulls_feature(path, codevolume):# path为pulls.txt存储地址，codevolume为代码量级
+def pulls_feature(path, codevolume):  # path为pulls.txt存储地址，codevolume为代码量级
     closed_duration, merged_duration, open_duration = pulls_duration_list(path)
-    closednums = len(closed_duration)
-    mergednums = len(merged_duration)
-    opennums = len(open_duration)
-    openratio = opennums / (opennums + closednums + mergednums)
-    mergedratio = mergednums / (opennums + closednums + mergednums)
+    closed_NUMS = len(closed_duration)
+    merged_NUMS = len(merged_duration)
+    open_NUMS = len(open_duration)
+    openratio = open_NUMS / (open_NUMS + closed_NUMS + merged_NUMS)
+    mergedratio = merged_NUMS / (open_NUMS + closed_NUMS + merged_NUMS)
     closed_duration_MEAN = duration_mean(closed_duration)
     open_duration_MEAN = duration_mean(open_duration)
     merged_duration_MEAN = duration_mean(merged_duration)
     if codevolume != 0:
-        pulls_factor = (opennums + closednums + mergednums)/codevolume
+        pulls_FACTOR = (open_NUMS + closed_NUMS + merged_NUMS) / codevolume
     else:
-        pulls_factor = None
-    return closednums, mergednums, opennums, closed_duration_MEAN, merged_duration_MEAN, open_duration_MEAN, openratio, mergedratio,pulls_factor
+        pulls_FACTOR = None
+    return closed_NUMS, merged_NUMS, open_NUMS, closed_duration_MEAN, merged_duration_MEAN, open_duration_MEAN, openratio, mergedratio, pulls_FACTOR
 
-# gitdatapath = 'D:/githubdata/alibaba_fastjson'
-# codepath = 'C:/Users/jiangdanni/Desktop/1525745906613'
-#
-# feature = []
-# codevolume = Code_Volume(codepath , 'alibaba_fastjson', '2018-01-01')
-# print 'codevolume:' + str(codevolume)
-# feature.extend(CommunityImpact(gitdatapath, codevolume))
-# feature.extend(pulls_feature(gitdatapath,codevolume))
-#
-# print feature
+
+# 返回标签数、标签系数
+def tags_feature(path, codevolume):
+    with open(path + '/' + 'tags.txt') as f:
+        tags = f.readlines()
+        tags_NUMS = len(tags)
+        if codevolume != 0:
+            tags_FACTOR = tags_NUMS / codevolume
+        else:
+            tags_FACTOR = None
+    return tags_NUMS, tags_FACTOR
+
+
+# 返回分支数、分支系数
+def branches_feature(path, codevolume):
+    with open(path + '/' + 'branches.txt') as f:
+        branches = f.readlines()
+        branches_NUMS = len(branches)
+        if codevolume != 0:
+            branches_FACTOR = branches_NUMS / codevolume
+        else:
+            branches_FACTOR = None
+    return branches_NUMS, branches_FACTOR
+
+
+# 返回评论数、评论系数
+def comments_feature(path, codevolume):
+    with open(path + '/' + 'comments.txt') as f:
+        comments = f.readlines()
+        comments_NUMS = len(comments)
+        if codevolume != 0:
+            comments_FACTOR = comments_NUMS / codevolume
+        else:
+            comments_FACTOR = None
+    return comments_NUMS, comments_FACTOR
+
+
+# 返回健康度
+def communityhealth_feature(path):
+    with open(path + '/' + 'community_profile.txt') as f:
+        lines = f.readlines()
+        health_percentage = json.loads(lines[0])['health_percentage']
+    return health_percentage
+
+
+gitdatapath = 'D:/githubdata/alibaba_fastjson'
+codepath = 'C:/Users/jiangdanni/Desktop/1525745906613'
+
+feature = []
+codevolume = Code_Volume(codepath, 'alibaba_fastjson', '2018-01-01')
+print 'codevolume:' + str(codevolume)
+feature.extend(CommunityImpact(gitdatapath, codevolume))
+feature.extend(pulls_feature(gitdatapath,codevolume))
+
+
