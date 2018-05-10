@@ -86,33 +86,16 @@ class ApiRequest(object):
 
     def get_commits(self, items, **kwargs):
         def get_commit_(item, worker):
-            # author_url = item["author"]["url"]
-            # print author_url
-            # header = self.get_header('users')
-            # is_failed, resp = worker.run_api(author_url, header)
-            # if not is_failed:
-            #     res = {
-            #         "date": item["commit"]["author"]["date"],
-            #         "company": resp.json()["company"],
-            #         "public_repos": resp.json()["public_repos"],
-            #         "public_gists": resp.json()["public_gists"],
-            #         "followers": resp.json()["followers"],
-            #         "user_created_at": resp.json()["created_at"]
-            #
-            #     }
-            # else:
-            #     res = {
-            #         "date": item["commit"]["author"]["date"],
-            #         "company": '',
-            #         "public_repos": '',
-            #         "public_gists": '',
-            #         "followers": '',
-            #         "user_created_at": ''
-            #     }
-            #return res
-            print item["author"]["url"]
-            return {"author": item["commit"]["author"],
-                    "author_url": item["author"]["url"] if "author" in item else ""}
+            res = {
+                   "date":"",
+                   "user_url":""
+                   }
+            if item["commit"] != None and item["commit"]["author"] != None:
+                res.update({"date": item["commit"]["author"]["date"]})
+            if item["author"] != None:
+                author_url = item["author"]["url"]
+                res["user_url"] = author_url
+            return res
         return [get_commit_(item, kwargs["worker"]) for item in items]
 
     def get_pulls(self, items, **kwargs):
@@ -194,12 +177,41 @@ class ApiRequest(object):
         else:
             return False
 
-    def save_res(self, res, api):
+    def save_res(self, res, api, worker):
         if not os.path.exists('gitdata'):
             os.mkdir('gitdata')
         if not os.path.exists('gitdata/' + self.repo_saved_):
             os.mkdir('gitdata/' + self.repo_saved_)
         file_name = 'gitdata/' + self.repo_saved_ + '/' + api.replace('/', '_') + '.txt'
+        if api == 'commits':
+            user_info = {}
+            for item in res:
+                if item["user_url"] != "":
+                    user_info[item["user_url"]] = ""
+            self.logger_.info(len(user_info))
+            for url in user_info:
+                header = self.get_header('users')
+                is_failed, resp = worker.run_api(url, header)
+                if not is_failed:
+                    info = {
+                        "company": resp.json()["company"],
+                        "public_repos": resp.json()["public_repos"],
+                        "public_gists": resp.json()["public_gists"],
+                        "followers": resp.json()["followers"],
+                        "user_created_at": resp.json()["created_at"]
+                    }
+                else:
+                    info = {
+                        "company": '',
+                        "public_repos": '',
+                        "public_gists": '',
+                        "followers": '',
+                        "user_created_at": ''
+                    }
+                user_info[url] = info
+            for i in range(len(res)):
+                if res[i]["user_url"] in user_info:
+                    res[i].update(user_info[res[i]["user_url"]])
         with open(file_name, 'w') as f:
             for item in res:
                 todo = json.dumps(item)
@@ -228,12 +240,14 @@ class ApiRequest(object):
             page += 1
             if page % 1 == 0:
                 self.logger_.info(self.repo_ + '/' + api + ' page :' + str(page))
+                break
             if api == 'community/profile':
                 break
-        global_worker_pool.return_worker(worker)
+
         if not is_failed:
-            self.save_res(res, api)
+            self.save_res(res, api, worker=worker)
             self.finished_[api] = True
+        global_worker_pool.return_worker(worker)
         self.logger_.info(self.repo_ + '/' + api + ' finished.')
         return
 
