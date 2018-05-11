@@ -2,8 +2,8 @@ import numpy as np
 import pandas as pd
 import os
 file_names = [
- 'commits_month.txt',
- 'commits_year.txt',
+ # 'commits_month.txt',
+ # 'commits_year.txt',
  'forks_month.txt',
  'forks_year.txt',
  'issues_month.txt',
@@ -69,4 +69,4 @@ def gen_dataset(data_path):
             file.write(line)
 
 
-gen_dataset('./stat')
+gen_dataset('D:/stat')
