@@ -1,2 +1,0 @@
-,date,nums,increment,ratio
-0,2018-04,21,0,0

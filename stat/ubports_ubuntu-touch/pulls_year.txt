@@ -1,3 +1,0 @@
-,date,nums,increment,ratio
-0,2018,1,-1,-0.5
-1,2017,2,0,0.0

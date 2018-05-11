@@ -72,11 +72,13 @@ def read_json(attr,line):
     if attr == 'comments':
         return json.loads(line)['created_at']
     if attr == 'commits':
-        return json.loads(line)['committer']['date']
+        return json.loads(line)['date']
     if attr == 'issues':
         return json.loads(line)['created_at']
     if attr == 'pulls':
         return json.loads(line)['created_at']
+    if attr == 'tags':
+        return json.loads(line)['date']
 
 
 
@@ -116,11 +118,12 @@ def get_all_software_year_stat(path, outpath, attr):
             df.to_csv(outpath + '/' + fdir + '/' + attr + '_year.txt')
 
 
-attr_list = ['stargazers','forks','comments','commits','issues','pulls']
+# attr_list = ['stargazers','forks','comments','commits','issues','pulls']
+attr_list = ['stargazers','forks','comments','issues','pulls']
 #path = '/Users/JDN/data'  # path 读取数据文件路径
 #outpath = '/Users/JDN/stat'  # outpath 输出文件路径
-path = '/Users/JDN/Downloads/githubdata'
-outpath = './stat'
+path = 'D:/githubdata'
+outpath = 'D:/stat'
 for attr in attr_list:
     get_all_software_month_stat(path,outpath,attr)
     get_all_software_year_stat(path,outpath,attr)

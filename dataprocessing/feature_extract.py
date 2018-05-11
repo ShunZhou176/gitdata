@@ -5,19 +5,23 @@ import numpy as np
 import math
 import datetime
 import json
+import os
 
 
 # 本方法用于计算代码量级，即代码量取10的对数
 # path为代码文件存储路径，software为软件名[owner_repo]
 def Code_Volume(path, software, date):
-    xls_file = pd.ExcelFile(path + '/' + software + '_codes.xlsx').parse(0)
-    if np.where(xls_file == date)[0].size != 0:
-        index = int(np.where(xls_file == date)[0])
+    if os.path.exists(path + '/' + software + '_codes.xlsx'):
+        xls_file = pd.ExcelFile(path + '/' + software + '_codes.xlsx').parse(0)
+        if np.where(xls_file == date)[0].size != 0:
+            index = int(np.where(xls_file == date)[0])
+        else:
+            print "Can't find " + date + ' code records!'
+            return 0
+        code = xls_file.iat[index, 1]
+        codevolume = math.log(code, 10)
     else:
-        print "Can't find " + date + ' code records!'
-        return 0
-    code = xls_file.iat[index, 1]
-    codevolume = math.log(code, 10)
+        codevolume = 0
     return codevolume
 
 
@@ -86,7 +90,9 @@ def duration_mean(list):
     sum = datetime.timedelta(0)
     for item in list:
         sum += item
-    mean = int(sum.days) / len(list)
+    if len(list) != 0:
+        mean = int(sum.days) / len(list)
+    else: mean = None
     return mean
 
 
@@ -96,10 +102,13 @@ def issues_feature(path):  # path为issues.txt存储地址
     closed_duration, open_duration = issues_duration_list(path)
     closed_NUMS = len(closed_duration)
     open_NUMS = len(open_duration)
-    openratio = open_NUMS / (open_NUMS + closed_NUMS)
+    if (open_NUMS + closed_NUMS) != 0:
+        openratio = open_NUMS / (open_NUMS + closed_NUMS)
+    else: openratio = None
     closed_duration_MEAN = duration_mean(closed_duration)
     open_duration_MEAN = duration_mean(open_duration)
-    return closed_NUMS, open_NUMS, closed_duration_MEAN, open_duration_MEAN, openratio
+    issues_feature_list = [closed_NUMS, open_NUMS, closed_duration_MEAN, open_duration_MEAN, openratio]
+    return issues_feature_list
 
 
 # 返回pulls特征：
@@ -111,8 +120,12 @@ def pulls_feature(path, codevolume):  # path为pulls.txt存储地址，codevolum
     closed_NUMS = len(closed_duration)
     merged_NUMS = len(merged_duration)
     open_NUMS = len(open_duration)
-    openratio = open_NUMS / (open_NUMS + closed_NUMS + merged_NUMS)
-    mergedratio = merged_NUMS / (open_NUMS + closed_NUMS + merged_NUMS)
+    if (open_NUMS + closed_NUMS + merged_NUMS) != 0:
+        openratio = open_NUMS / (open_NUMS + closed_NUMS + merged_NUMS)
+        mergedratio = merged_NUMS / (open_NUMS + closed_NUMS + merged_NUMS)
+    else:
+        openratio = mergedratio = None
+
     closed_duration_MEAN = duration_mean(closed_duration)
     open_duration_MEAN = duration_mean(open_duration)
     merged_duration_MEAN = duration_mean(merged_duration)
@@ -120,7 +133,10 @@ def pulls_feature(path, codevolume):  # path为pulls.txt存储地址，codevolum
         pulls_FACTOR = (open_NUMS + closed_NUMS + merged_NUMS) / codevolume
     else:
         pulls_FACTOR = None
-    return closed_NUMS, merged_NUMS, open_NUMS, closed_duration_MEAN, merged_duration_MEAN, open_duration_MEAN, openratio, mergedratio, pulls_FACTOR
+    pulls_feature_list = [closed_NUMS, merged_NUMS, open_NUMS,
+                          closed_duration_MEAN, merged_duration_MEAN, open_duration_MEAN,
+                          openratio, mergedratio, pulls_FACTOR]
+    return pulls_feature_list
 
 
 # 返回标签数、标签系数
@@ -132,7 +148,8 @@ def tags_feature(path, codevolume):
             tags_FACTOR = tags_NUMS / codevolume
         else:
             tags_FACTOR = None
-    return tags_NUMS, tags_FACTOR
+    tags_feature_list = [tags_NUMS, tags_FACTOR]
+    return tags_feature_list
 
 
 # 返回分支数、分支系数
@@ -144,7 +161,8 @@ def branches_feature(path, codevolume):
             branches_FACTOR = branches_NUMS / codevolume
         else:
             branches_FACTOR = None
-    return branches_NUMS, branches_FACTOR
+    branches_feature_list = [branches_NUMS, branches_FACTOR]
+    return branches_feature_list
 
 
 # 返回评论数、评论系数
@@ -156,7 +174,8 @@ def comments_feature(path, codevolume):
             comments_FACTOR = comments_NUMS / codevolume
         else:
             comments_FACTOR = None
-    return comments_NUMS, comments_FACTOR
+    comments_feature_list = [comments_NUMS, comments_FACTOR]
+    return comments_feature_list
 
 
 # 返回健康度
@@ -167,13 +186,67 @@ def communityhealth_feature(path):
     return health_percentage
 
 
-gitdatapath = 'D:/githubdata/alibaba_fastjson'
+# 返回提交数和贡献者的特征
+def commits_contributors_feature(path, codevolume):
+    commits_NUMS = 0
+    contributors_NUMS = 0
+    active_contributors_NUMS = 0
+    contributors = {}
+    active_contributors = {}  # ！列表里的值尚未利用！！
+    with open(path + '/' + 'commits.txt') as f:
+        for line in f.readlines():
+            commits_NUMS += 1
+            item = json.loads(line)
+            # 统计贡献者总数，每个贡献者的提交数
+            if not contributors.has_key(item["user_url"]):
+                contributors[item["user_url"]] = 1
+                contributors_NUMS += 1
+            else:
+                contributors[item["user_url"]] += 1
+            # 统计活跃贡献者
+            if item["date"][0:4] == '2018':
+                if not active_contributors.has_key(item["user_url"]):
+                    active_contributors[item["user_url"]] = 1
+                    active_contributors_NUMS += 1
+                else:
+                    active_contributors[item["user_url"]] += 1
+    active_ratio = active_contributors_NUMS / contributors_NUMS
+    commits_person_avg = commits_NUMS / contributors_NUMS
+    if codevolume != 0:
+        commits_FACTOR = commits_NUMS / codevolume
+        contributors_FACTOR = contributors_NUMS / codevolume
+    else:
+        commits_FACTOR = None
+        contributors_FACTOR = None
+    commits_contributors_feature_list = [commits_NUMS, commits_FACTOR, contributors_NUMS, contributors_FACTOR,
+                                         commits_person_avg, active_contributors_NUMS, active_ratio]
+    return commits_contributors_feature_list, contributors, active_contributors
+
+
+gitdatapath = 'D:/githubdata'
 codepath = 'C:/Users/jiangdanni/Desktop/1525745906613'
-
+#
 feature = []
-codevolume = Code_Volume(codepath, 'alibaba_fastjson', '2018-01-01')
-print 'codevolume:' + str(codevolume)
-feature.extend(CommunityImpact(gitdatapath, codevolume))
-feature.extend(pulls_feature(gitdatapath,codevolume))
+# codevolume = Code_Volume(codepath, 'alibaba_fastjson', '2018-01-01')
+# print 'codevolume:' + str(codevolume)
 
-
+path_list = os.listdir(gitdatapath)
+for software in path_list:
+    software_feature = [software]
+    path = gitdatapath + '/' + software
+    codevolume = Code_Volume(codepath, software, '2017-01-01')
+    software_feature.extend(pulls_feature(path, codevolume))
+    software_feature.extend(issues_feature(path))
+    software_feature.extend(tags_feature(path, codevolume))
+    software_feature.extend(comments_feature(path, codevolume))
+    software_feature.extend(branches_feature(path, codevolume))
+    software_feature.append(communityhealth_feature(path))
+    # software_feature.extend(commits_contributors_feature(path,codevolume))
+    feature.append(software_feature)
+    print software_feature
+print feature
+with open('D:/gitdata/features/feature2.csv', 'w') as file:
+    for f in feature:
+        line = ','.join([str(item) for item in f])
+        line += '\n'
+        file.write(line)
