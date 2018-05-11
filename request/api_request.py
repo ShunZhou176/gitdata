@@ -92,7 +92,7 @@ class ApiRequest(object):
                    }
             if item["commit"] != None and item["commit"]["author"] != None:
                 res.update({"date": item["commit"]["author"]["date"]})
-            if item["author"] != None:
+            if item["author"] != None and "url" in item["author"]:
                 author_url = item["author"]["url"]
                 res["user_url"] = author_url
             return res
