@@ -240,7 +240,6 @@ class ApiRequest(object):
             page += 1
             if page % 1 == 0:
                 self.logger_.info(self.repo_ + '/' + api + ' page :' + str(page))
-                break
             if api == 'community/profile':
                 break
 
