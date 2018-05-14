@@ -3,6 +3,8 @@ import time
 import requests
 import logging
 import json
+import traceback
+from utils import safe_while
 
 class CrawlerRobot(object):
     def __init__(self, token, hour_limit):
@@ -23,11 +25,29 @@ class CrawlerRobot(object):
         pass
     def run_api_(self, url, header_template):
         header_template['Authorization'] = header_template['Authorization'].format(self.token_)
-        resp = requests.get(url, headers=header_template)
-        return resp
+        success = False
+        with safe_while(
+                sleep=6, increment=0.5, action=url, _raise=False) as proceed:
+            while proceed():
+                try:
+                    resp = requests.get(url, headers=header_template)
+                    return False, resp
+                # Work around https://github.com/kennethreitz/requests/issues/2364
+                except requests.exception.ConnectionError as e:
+                    self.logger_.warn("Saw %s while unlocking; retrying...", str(e))
+        return True, None
+        # try:
+        #     resp = requests.get(url, headers=header_template)
+        # except Exception as e:
+        #     self.logger_.error("type error: " + str(e))
+        #     self.logger_.error(traceback.format_exc())
+        #     return True, []
+        # return False, resp
 
     def run_api(self, url, header):
-        resp = self.run_api_(url, header)
+        failed, resp = self.run_api_(url, header)
+        if failed:
+            return True, []
         is_failed = False
         if self.is_resp_fail(resp):
             retry_time = 5

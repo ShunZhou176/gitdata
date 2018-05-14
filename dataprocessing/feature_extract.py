@@ -13,8 +13,8 @@ import os
 def Code_Volume(path, software, date):
     if os.path.exists(path + '/' + software + '_codes.xlsx'):
         xls_file = pd.ExcelFile(path + '/' + software + '_codes.xlsx').parse(0)
-        if np.where(xls_file == date)[0].size != 0:
-            index = int(np.where(xls_file == date)[0])
+        if np.where(xls_file[u'时间'] == date)[0].size != 0:
+            index = int(np.where(xls_file[u'时间'] == date)[0])
         else:
             print "Can't find " + date + ' code records!'
             return 0
@@ -92,7 +92,8 @@ def duration_mean(list):
         sum += item
     if len(list) != 0:
         mean = int(sum.days) / len(list)
-    else: mean = None
+    else:
+        mean = None
     return mean
 
 
@@ -104,7 +105,8 @@ def issues_feature(path):  # path为issues.txt存储地址
     open_NUMS = len(open_duration)
     if (open_NUMS + closed_NUMS) != 0:
         openratio = open_NUMS / (open_NUMS + closed_NUMS)
-    else: openratio = None
+    else:
+        openratio = None
     closed_duration_MEAN = duration_mean(closed_duration)
     open_duration_MEAN = duration_mean(open_duration)
     issues_feature_list = [closed_NUMS, open_NUMS, closed_duration_MEAN, open_duration_MEAN, openratio]
@@ -220,33 +222,53 @@ def commits_contributors_feature(path, codevolume):
         contributors_FACTOR = None
     commits_contributors_feature_list = [commits_NUMS, commits_FACTOR, contributors_NUMS, contributors_FACTOR,
                                          commits_person_avg, active_contributors_NUMS, active_ratio]
-    return commits_contributors_feature_list, contributors, active_contributors
+    return commits_contributors_feature_list#, contributors, active_contributors
 
 
-gitdatapath = 'D:/githubdata'
-codepath = 'C:/Users/jiangdanni/Desktop/1525745906613'
-#
+gitdatapath = '/Users/JDN/PycharmProjects/gitdata/gitdata'
+codepath = '/Users/JDN/Desktop/1525745906613'
+
 feature = []
-# codevolume = Code_Volume(codepath, 'alibaba_fastjson', '2018-01-01')
-# print 'codevolume:' + str(codevolume)
+with open('/Users/JDN/PycharmProjects/gitdata/software_rate.txt') as software:
+    softwarelist = software.readlines()
 
-path_list = os.listdir(gitdatapath)
-for software in path_list:
+for software in softwarelist:
+    software = software[:-1]
     software_feature = [software]
     path = gitdatapath + '/' + software
     codevolume = Code_Volume(codepath, software, '2017-01-01')
+    software_feature.append(codevolume)
     software_feature.extend(pulls_feature(path, codevolume))
     software_feature.extend(issues_feature(path))
     software_feature.extend(tags_feature(path, codevolume))
     software_feature.extend(comments_feature(path, codevolume))
     software_feature.extend(branches_feature(path, codevolume))
     software_feature.append(communityhealth_feature(path))
-    # software_feature.extend(commits_contributors_feature(path,codevolume))
+    software_feature.extend(commits_contributors_feature(path, codevolume))
     feature.append(software_feature)
     print software_feature
-print feature
-with open('D:/gitdata/features/feature2.csv', 'w') as file:
+
+pulls_header = ['pull_closed_NUMS', 'pull_merged_NUMS', 'pull_open_NUMS',
+                'pull_closed_duration_MEAN', 'pull_merged_duration_MEAN', 'pull_open_duration_MEAN',
+                'pull_openratio', 'pull_mergedratio', 'pulls_FACTOR']
+issues_header = ['issues_closed_NUMS', 'issues_open_NUMS', 'issues_closed_duration_MEAN', 'issues_open_duration_MEAN', 'issues_openratio']
+tags_header = ['tags_NUMS', 'tags_FACTOR']
+comments_header = ['comments_NUMS', 'comments_FACTOR']
+branches_header = ['branches_NUMS', 'branches_FACTOR']
+communityhealth_header = ['communityhealth']
+commits_contributors_header = ['commits_NUMS', 'commits_FACTOR', 'contributors_NUMS', 'contributors_FACTOR',
+                               'commits_person_avg', 'active_contributors_NUMS', 'active_ratio']
+
+header = ['software','codevolume'] + pulls_header + issues_header + tags_header + comments_header + branches_header + communityhealth_header + commits_contributors_header
+header = ','.join(header)
+header += '\n'
+with open('feature2.csv', 'w') as file:
+    file.write(header)
     for f in feature:
         line = ','.join([str(item) for item in f])
         line += '\n'
         file.write(line)
+
+# codevolume = Code_Volume(codepath, 'apache_kafka', '2018-01-01')
+# a = commits_contributors_feature('/Users/JDN/PycharmProjects/gitdata/gitdata/apache_kafka', codevolume)
+# print a

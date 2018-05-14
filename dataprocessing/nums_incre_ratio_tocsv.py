@@ -83,8 +83,12 @@ def read_json(attr,line):
 
 
 def get_all_software_month_stat(path, outpath, attr):
-    fs = os.listdir(path)
-    for fdir in fs:
+    with open('/Users/JDN/PycharmProjects/gitdata/software_rate.txt') as software:
+        softwarelist = software.readlines()
+    if not os.path.exists(outpath):  # 输出文件夹若不存在则新建一个
+        os.mkdir(outpath)
+    for fdir in softwarelist:
+        fdir = fdir[:-1]
         print fdir
         data = []
         if not os.path.exists(outpath + '/' + fdir):  # 输出文件夹若不存在则新建一个
@@ -101,8 +105,12 @@ def get_all_software_month_stat(path, outpath, attr):
 
 
 def get_all_software_year_stat(path, outpath, attr):
-    fs = os.listdir(path)
-    for fdir in fs:
+    with open('/Users/JDN/PycharmProjects/gitdata/software_rate.txt') as software:
+        softwarelist = software.readlines()
+    if not os.path.exists(outpath):  # 输出文件夹若不存在则新建一个
+        os.mkdir(outpath)
+    for fdir in softwarelist:
+        fdir = fdir[:-1]
         print fdir
         data = []
         if not os.path.exists(outpath + '/' + fdir):  # 输出文件夹若不存在则新建一个
@@ -118,12 +126,11 @@ def get_all_software_year_stat(path, outpath, attr):
             df.to_csv(outpath + '/' + fdir + '/' + attr + '_year.txt')
 
 
-# attr_list = ['stargazers','forks','comments','commits','issues','pulls']
-attr_list = ['stargazers','forks','comments','issues','pulls']
+attr_list = ['stargazers','forks','comments','commits','issues','pulls','tags']
 #path = '/Users/JDN/data'  # path 读取数据文件路径
 #outpath = '/Users/JDN/stat'  # outpath 输出文件路径
-path = 'D:/githubdata'
-outpath = 'D:/stat'
+path = '/Users/JDN/PycharmProjects/gitdata/gitdata'
+outpath = '/Users/JDN/stat'
 for attr in attr_list:
     get_all_software_month_stat(path,outpath,attr)
     get_all_software_year_stat(path,outpath,attr)

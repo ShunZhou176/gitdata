@@ -189,6 +189,7 @@ class ApiRequest(object):
                 if item["user_url"] != "":
                     user_info[item["user_url"]] = ""
             self.logger_.info(len(user_info))
+            num_of_call = 0
             for url in user_info:
                 header = self.get_header('users')
                 is_failed, resp = worker.run_api(url, header)
@@ -209,6 +210,9 @@ class ApiRequest(object):
                         "user_created_at": ''
                     }
                 user_info[url] = info
+                num_of_call += 1
+                if num_of_call % 10 == 0:
+                    self.logger_.info(self.repo_ + " users run: " + str(num_of_call))
             for i in range(len(res)):
                 if res[i]["user_url"] in user_info:
                     res[i].update(user_info[res[i]["user_url"]])

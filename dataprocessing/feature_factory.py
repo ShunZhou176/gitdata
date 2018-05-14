@@ -2,8 +2,8 @@ import numpy as np
 import pandas as pd
 import os
 file_names = [
- # 'commits_month.txt',
- # 'commits_year.txt',
+ 'commits_month.txt',
+ 'commits_year.txt',
  'forks_month.txt',
  'forks_year.txt',
  'issues_month.txt',
@@ -53,7 +53,10 @@ def gen_head():
 def gen_dataset(data_path):
     all_data = os.listdir(data_path)
     all_feature = []
-    for software in all_data:
+    with open('/Users/JDN/PycharmProjects/gitdata/software_rate.txt') as software:
+        softwarelist = software.readlines()
+    for software in softwarelist:
+        software = software[:-1]
         feature = [software]
         path = data_path + '/' + software + '/'
         for fn in file_names:
@@ -61,7 +64,7 @@ def gen_dataset(data_path):
             feature_part = gen_feature(file_path=file_path)
             feature.extend(feature_part)
         all_feature.append(feature)
-    with open('feature.csv', 'w') as file:
+    with open('/Users/JDN/PycharmProjects/gitdata/dataprocessing/feature.csv', 'w') as file:
         file.write(gen_head())
         for f in all_feature:
             line = ','.join([str(item) for item in f])
@@ -69,4 +72,4 @@ def gen_dataset(data_path):
             file.write(line)
 
 
-gen_dataset('D:/stat')
+gen_dataset('/Users/JDN/stat')
