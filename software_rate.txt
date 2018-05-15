@@ -79,3 +79,4 @@ apache_ace
 apache_cocoon
 apache_mina
 apache_karaf
+ceph_ceph

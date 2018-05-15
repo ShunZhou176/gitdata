@@ -82,14 +82,13 @@ def read_json(attr,line):
 
 
 
-def get_all_software_month_stat(path, outpath, attr):
-    with open('/Users/JDN/PycharmProjects/gitdata/software_rate.txt') as software:
+def get_all_software_stat(path, outpath, attr,softwarelistpath):
+    with open(softwarelistpath) as software:
         softwarelist = software.readlines()
     if not os.path.exists(outpath):  # 输出文件夹若不存在则新建一个
         os.mkdir(outpath)
     for fdir in softwarelist:
         fdir = fdir[:-1]
-        print fdir
         data = []
         if not os.path.exists(outpath + '/' + fdir):  # 输出文件夹若不存在则新建一个
             os.mkdir(outpath + '/' + fdir)
@@ -97,33 +96,20 @@ def get_all_software_month_stat(path, outpath, attr):
             with open(path + '/' + fdir + '/' + attr + '.txt', 'r') as f:
                 for line in f.readlines():
                     data.append(read_json(attr,line))  # 读取时间戳列表
-            year_list = get_nums_month(data)
-            increment_list = get_increment(year_list)
+                    print path + '/' + fdir + '/' + attr
             head = ['date', 'nums', 'increment', 'ratio']
-            df = pd.DataFrame(increment_list, columns=head)
+            month_list = get_nums_month(data)
+            incre_month_list = get_increment(month_list)
+            df = pd.DataFrame(incre_month_list, columns=head)
             df.to_csv(outpath + '/' + fdir + '/' + attr + '_month.txt')
 
-
-def get_all_software_year_stat(path, outpath, attr):
-    with open('/Users/JDN/PycharmProjects/gitdata/software_rate.txt') as software:
-        softwarelist = software.readlines()
-    if not os.path.exists(outpath):  # 输出文件夹若不存在则新建一个
-        os.mkdir(outpath)
-    for fdir in softwarelist:
-        fdir = fdir[:-1]
-        print fdir
-        data = []
-        if not os.path.exists(outpath + '/' + fdir):  # 输出文件夹若不存在则新建一个
-            os.mkdir(outpath + '/' + fdir)
-        if '.DS_Store' not in fdir:
-            with open(path + '/' + fdir + '/' + attr + '.txt', 'r') as f:
-                for line in f.readlines():
-                    data.append(read_json(attr,line))  # 读取时间戳列表
             year_list = get_nums_year(data)
-            increment_list = get_increment(year_list)
-            head = ['date', 'nums', 'increment', 'ratio']
-            df = pd.DataFrame(increment_list, columns=head)
+            incre_year_list = get_increment(year_list)
+            df = pd.DataFrame(incre_year_list, columns=head)
             df.to_csv(outpath + '/' + fdir + '/' + attr + '_year.txt')
+
+
+
 
 
 attr_list = ['stargazers','forks','comments','commits','issues','pulls','tags']
@@ -131,6 +117,6 @@ attr_list = ['stargazers','forks','comments','commits','issues','pulls','tags']
 #outpath = '/Users/JDN/stat'  # outpath 输出文件路径
 path = '/Users/JDN/PycharmProjects/gitdata/gitdata'
 outpath = '/Users/JDN/stat'
+softwarelistpath = '/Users/JDN/PycharmProjects/gitdata/software_rate.txt'
 for attr in attr_list:
-    get_all_software_month_stat(path,outpath,attr)
-    get_all_software_year_stat(path,outpath,attr)
+    get_all_software_stat(path,outpath,attr,softwarelistpath)

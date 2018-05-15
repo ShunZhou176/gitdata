@@ -262,13 +262,9 @@ commits_contributors_header = ['commits_NUMS', 'commits_FACTOR', 'contributors_N
 header = ['software','codevolume'] + pulls_header + issues_header + tags_header + comments_header + branches_header + communityhealth_header + commits_contributors_header
 header = ','.join(header)
 header += '\n'
-with open('feature2.csv', 'w') as file:
+with open('/Users/JDN/PycharmProjects/gitdata/dataprocessing/feature2.csv', 'w') as file:
     file.write(header)
     for f in feature:
         line = ','.join([str(item) for item in f])
         line += '\n'
         file.write(line)
-
-# codevolume = Code_Volume(codepath, 'apache_kafka', '2018-01-01')
-# a = commits_contributors_feature('/Users/JDN/PycharmProjects/gitdata/gitdata/apache_kafka', codevolume)
-# print a
