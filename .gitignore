@@ -4,4 +4,4 @@ gitdata/
 *.pyc
 .idea/
 *.log
-tokens.txt
+tokens
