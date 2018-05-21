@@ -2,16 +2,27 @@ import numpy as np
 import pandas as pd
 import os
 file_names = [
+ 'comments_month.txt',
+ 'comments_quart.txt',
+ 'comments_year.txt',
  'commits_month.txt',
+ 'commits_quart.txt',
  'commits_year.txt',
  'forks_month.txt',
+ 'forks_quart.txt',
  'forks_year.txt',
  'issues_month.txt',
+ 'issues_quart.txt',
  'issues_year.txt',
  'pulls_month.txt',
+ 'pulls_quart.txt',
  'pulls_year.txt',
  'stargazers_month.txt',
- 'stargazers_year.txt']
+ 'stargazers_quart.txt',
+ 'stargazers_year.txt',
+ 'tags_month.txt',
+ 'tags_quart.txt',
+ 'tags_year.txt']
 
 
 def gen_statistic(pd_frame):

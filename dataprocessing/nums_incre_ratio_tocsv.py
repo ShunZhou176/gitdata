@@ -82,7 +82,7 @@ def read_json(attr,line):
 
 
 
-def get_all_software_month_stat(path, outpath, attr):
+def get_all_software_stat(path, outpath, attr):
     with open('/Users/JDN/PycharmProjects/gitdata/software_rate.txt') as software:
         softwarelist = software.readlines()
     if not os.path.exists(outpath):  # 输出文件夹若不存在则新建一个
@@ -97,33 +97,20 @@ def get_all_software_month_stat(path, outpath, attr):
             with open(path + '/' + fdir + '/' + attr + '.txt', 'r') as f:
                 for line in f.readlines():
                     data.append(read_json(attr,line))  # 读取时间戳列表
-            year_list = get_nums_month(data)
-            increment_list = get_increment(year_list)
-            head = ['date', 'nums', 'increment', 'ratio']
-            df = pd.DataFrame(increment_list, columns=head)
-            df.to_csv(outpath + '/' + fdir + '/' + attr + '_month.txt')
-
-
-def get_all_software_year_stat(path, outpath, attr):
-    with open('/Users/JDN/PycharmProjects/gitdata/software_rate.txt') as software:
-        softwarelist = software.readlines()
-    if not os.path.exists(outpath):  # 输出文件夹若不存在则新建一个
-        os.mkdir(outpath)
-    for fdir in softwarelist:
-        fdir = fdir[:-1]
-        print fdir
-        data = []
-        if not os.path.exists(outpath + '/' + fdir):  # 输出文件夹若不存在则新建一个
-            os.mkdir(outpath + '/' + fdir)
-        if '.DS_Store' not in fdir:
-            with open(path + '/' + fdir + '/' + attr + '.txt', 'r') as f:
-                for line in f.readlines():
-                    data.append(read_json(attr,line))  # 读取时间戳列表
+            month_list = get_nums_month(data)
+            quart_list = get_nums_quart(data)
             year_list = get_nums_year(data)
-            increment_list = get_increment(year_list)
+            year_increment_list = get_increment(year_list)
+            quart_increment_list = get_increment(quart_list)
+            month_increment_list = get_increment(month_list)
             head = ['date', 'nums', 'increment', 'ratio']
-            df = pd.DataFrame(increment_list, columns=head)
-            df.to_csv(outpath + '/' + fdir + '/' + attr + '_year.txt')
+            year_df = pd.DataFrame(year_increment_list, columns=head)
+            quart_df = pd.DataFrame(quart_increment_list, columns=head)
+            month_df = pd.DataFrame(month_increment_list, columns=head)
+            year_df.to_csv(outpath + '/' + fdir + '/' + attr + '_year.txt')
+            quart_df.to_csv(outpath + '/' + fdir + '/' + attr + '_quart.txt')
+            month_df.to_csv(outpath + '/' + fdir + '/' + attr + '_month.txt')
+
 
 
 attr_list = ['stargazers','forks','comments','commits','issues','pulls','tags']
@@ -132,5 +119,4 @@ attr_list = ['stargazers','forks','comments','commits','issues','pulls','tags']
 path = '/Users/JDN/PycharmProjects/gitdata/gitdata'
 outpath = '/Users/JDN/stat'
 for attr in attr_list:
-    get_all_software_month_stat(path,outpath,attr)
-    get_all_software_year_stat(path,outpath,attr)
+    get_all_software_stat(path,outpath,attr)

@@ -15,30 +15,14 @@ def Code_Volume(path, software, date):
         xls_file = pd.ExcelFile(path + '/' + software + '_codes.xlsx').parse(0)
         if np.where(xls_file[u'时间'] == date)[0].size != 0:
             index = int(np.where(xls_file[u'时间'] == date)[0])
+            code = xls_file.iat[index, 1]
+            codevolume = math.log(code, 10)
         else:
             print "Can't find " + date + ' code records!'
-            return 0
-        code = xls_file.iat[index, 1]
-        codevolume = math.log(code, 10)
+            codevolume = 5 #设为默认值
     else:
-        codevolume = 0
+        codevolume = 5
     return codevolume
-
-
-# 本方法返回订阅数，分叉数，加星数，社区影响力系数=(watch+fork+star)/代码量级
-# path为存放subscribers，forks，stargazers文件的路径
-def CommunityImpact(path, codevolume):
-    with open(path + '/' + 'subscribers.txt')as f:
-        lines = f.readlines()
-        subscribers = len(lines)
-    with open(path + '/' + 'forks.txt')as f:
-        lines = f.readlines()
-        forks = len(lines)
-    with open(path + '/' + 'stargazers.txt')as f:
-        lines = f.readlines()
-        stargazers = len(lines)
-    communityimpact = (subscribers + forks + stargazers) / codevolume
-    return subscribers, forks, stargazers, communityimpact
 
 
 # 本方法返回已关闭问题和开放问题的处理时长,返回list
@@ -95,6 +79,24 @@ def duration_mean(list):
     else:
         mean = None
     return mean
+
+
+# 本方法返回订阅数，分叉数，加星数，社区影响力系数=(watch+fork+star)/代码量级
+# path为存放subscribers，forks，stargazers文件的路径
+def CommunityImpact(path, codevolume):
+    with open(path + '/' + 'subscribers.txt')as f:
+        lines = f.readlines()
+        subscribers = len(lines)
+    with open(path + '/' + 'forks.txt')as f:
+        lines = f.readlines()
+        forks = len(lines)
+    with open(path + '/' + 'stargazers.txt')as f:
+        lines = f.readlines()
+        stargazers = len(lines)
+    communityimpact = (subscribers + forks + stargazers) / codevolume
+    return_list = [subscribers, forks, stargazers, communityimpact]
+    return return_list
+
 
 
 # 返回issues特征：
@@ -238,6 +240,7 @@ for software in softwarelist:
     path = gitdatapath + '/' + software
     codevolume = Code_Volume(codepath, software, '2017-01-01')
     software_feature.append(codevolume)
+    software_feature.extend(CommunityImpact(path, codevolume))
     software_feature.extend(pulls_feature(path, codevolume))
     software_feature.extend(issues_feature(path))
     software_feature.extend(tags_feature(path, codevolume))
@@ -248,6 +251,7 @@ for software in softwarelist:
     feature.append(software_feature)
     print software_feature
 
+CommunityImpact_header = ['subscribers', 'forks', 'stargazers', 'communityimpact']
 pulls_header = ['pull_closed_NUMS', 'pull_merged_NUMS', 'pull_open_NUMS',
                 'pull_closed_duration_MEAN', 'pull_merged_duration_MEAN', 'pull_open_duration_MEAN',
                 'pull_openratio', 'pull_mergedratio', 'pulls_FACTOR']
@@ -259,7 +263,7 @@ communityhealth_header = ['communityhealth']
 commits_contributors_header = ['commits_NUMS', 'commits_FACTOR', 'contributors_NUMS', 'contributors_FACTOR',
                                'commits_person_avg', 'active_contributors_NUMS', 'active_ratio']
 
-header = ['software','codevolume'] + pulls_header + issues_header + tags_header + comments_header + branches_header + communityhealth_header + commits_contributors_header
+header = ['software','codevolume'] + CommunityImpact_header + pulls_header + issues_header + tags_header + comments_header + branches_header + communityhealth_header + commits_contributors_header
 header = ','.join(header)
 header += '\n'
 with open('feature2.csv', 'w') as file:
