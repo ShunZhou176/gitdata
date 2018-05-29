@@ -124,9 +124,58 @@ def get_all_software_stat(path, outpath, attr):
             year_df = pd.DataFrame(year_incre_list, columns=head)
             quart_df = pd.DataFrame(quart_incre_list, columns=head)
             month_df = pd.DataFrame(month_incre_list, columns=head)
-            year_df.to_csv(outpath + '/' + fdir + '/' + attr + '_year.txt')
-            quart_df.to_csv(outpath + '/' + fdir + '/' + attr + '_quart.txt')
-            month_df.to_csv(outpath + '/' + fdir + '/' + attr + '_month.txt')
+            year_df.to_csv(outpath + '/' + fdir + '/' + attr + '_year.csv')
+            quart_df.to_csv(outpath + '/' + fdir + '/' + attr + '_quart.csv')
+            month_df.to_csv(outpath + '/' + fdir + '/' + attr + '_month.csv')
+
+
+def get_all_software_stat_recent(path, outpath, attr):
+    with open('/Users/JDN/PycharmProjects/gitdata/software_rate.txt') as software:
+        softwarelist = software.readlines()
+    if not os.path.exists(outpath):  # 输出文件夹若不存在则新建一个
+        os.mkdir(outpath)
+    for fdir in softwarelist:
+        fdir = fdir[:-1]
+        print fdir
+        data = []
+        if not os.path.exists(outpath + '/' + fdir):  # 输出文件夹若不存在则新建一个
+            os.mkdir(outpath + '/' + fdir)
+        if '.DS_Store' not in fdir:
+            with open(path + '/' + fdir + '/' + attr + '.txt', 'r') as f:
+                for line in f.readlines():
+                    data.append(read_json(attr, line))  # 读取时间戳列表
+
+            #————————————截取最近两年数据——————————————————
+            month, quart, year = get_nums(data)
+            year_list = []
+            quart_list = []
+            month_list = []
+            for data in month:
+                if data[0][0:4] in {'2016','2017','2018'}:
+                    month_list.append(data)
+                else:
+                    break
+            for data in quart:
+                if data[0][0:4] in {'2016','2017','2018'}:
+                    quart_list.append(data)
+                else:
+                    break
+            for data in year:
+                if data[0][0:4] in {'2016','2017','2018'}:
+                    year_list.append(data)
+                else:
+                    break
+            #————————————截取最近两年数据——————————————————
+            year_incre_list = get_increment(year_list)
+            quart_incre_list = get_increment(quart_list)
+            month_incre_list = get_increment(month_list)
+            head = ['date', 'nums', 'increment', 'ratio']
+            year_df = pd.DataFrame(year_incre_list, columns=head)
+            quart_df = pd.DataFrame(quart_incre_list, columns=head)
+            month_df = pd.DataFrame(month_incre_list, columns=head)
+            year_df.to_csv(outpath + '/' + fdir + '/' + attr + '_year.csv')
+            quart_df.to_csv(outpath + '/' + fdir + '/' + attr + '_quart.csv')
+            month_df.to_csv(outpath + '/' + fdir + '/' + attr + '_month.csv')
 
 
 attr_list = ['stargazers', 'forks', 'comments', 'commits', 'issues', 'pulls', 'tags']

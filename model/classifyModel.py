@@ -8,20 +8,42 @@ from sklearn import linear_model
 import numpy as np
 
 
-df = pd.read_csv('/Users/JDN/Desktop/allfeature_nonull.csv')
+df = pd.read_csv('/Users/JDN/Desktop/newfeature.csv')
 df = df.replace('None', 0)
 df = df.replace('NaN', 0)
-df = df[['commits_year_ratio_min',
-         'communityhealth',
-         'forks_year_incre_kurt',
-         'stargazers_month_ratio_skew',
+df = df[['comments_year_ratio_min',
+         'comments_year_ratio_median',
+         'issues_month_nums_skew',
+         'stargazers_quart_incre_skew',
+         'stargazers_year_incre_skew',
+         'tags_month_incre_kurt',
+         'tags_quart_incre_kurt',
+         'tags_year_nums_kurt',
+         'tags_quart_nums_kurt',
+         'tags_month_nums_kurt',
+         'tags_year_nums_skew',
+         'tags_quart_nums_skew',
+         'forks_quart_incre_skew',
+         'tags_month_nums_skew',
          'forks_month_ratio_skew',
-         'active_ratio',
-         'tags_NUMS',
-         'commits_month_ratio_mean',
-         'forks_year_incre_skew',
-         'commits_month_ratio_std',
-         'stargazers_year_incre_min', 'rate']]
+         'communityhealth',
+         'stargazers',
+         'commits_year_ratio_min',
+         'stargazers_month_ratio_skew',
+         'issues_quart_ratio_min',
+         'pulls_month_ratio_skew',
+         'forks_year_ratio_median',
+         'forks_quart_incre_kurt',
+         'issues_month_ratio_skew',
+         'communityimpact',
+         'pulls_quart_ratio_skew',
+         'stargazers_quart_incre_kurt',
+         'forks_month_ratio_mean',
+         'tags_month_incre_skew',
+         'subscribers',
+         'stargazers_quart_ratio_min',
+         'forks_quart_ratio_median',
+         'rate']]
 data = df.values
 binary = lambda x : 1 if x > 4 else 0
 classification = df['rate'].map(binary)
