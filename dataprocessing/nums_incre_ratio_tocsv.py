@@ -124,9 +124,9 @@ def get_all_software_stat(path, outpath, attr):
             year_df = pd.DataFrame(year_incre_list, columns=head)
             quart_df = pd.DataFrame(quart_incre_list, columns=head)
             month_df = pd.DataFrame(month_incre_list, columns=head)
-            year_df.to_csv(outpath + '/' + fdir + '/' + attr + '_year.csv')
-            quart_df.to_csv(outpath + '/' + fdir + '/' + attr + '_quart.csv')
-            month_df.to_csv(outpath + '/' + fdir + '/' + attr + '_month.csv')
+            year_df.to_csv(outpath + '/' + fdir + '/' + attr + '_year.txt')
+            quart_df.to_csv(outpath + '/' + fdir + '/' + attr + '_quart.txt')
+            month_df.to_csv(outpath + '/' + fdir + '/' + attr + '_month.txt')
 
 
 def get_all_software_stat_recent(path, outpath, attr):
@@ -173,9 +173,9 @@ def get_all_software_stat_recent(path, outpath, attr):
             year_df = pd.DataFrame(year_incre_list, columns=head)
             quart_df = pd.DataFrame(quart_incre_list, columns=head)
             month_df = pd.DataFrame(month_incre_list, columns=head)
-            year_df.to_csv(outpath + '/' + fdir + '/' + attr + '_year.csv')
-            quart_df.to_csv(outpath + '/' + fdir + '/' + attr + '_quart.csv')
-            month_df.to_csv(outpath + '/' + fdir + '/' + attr + '_month.csv')
+            year_df.to_csv(outpath + '/' + fdir + '/' + attr + '_year.txt')
+            quart_df.to_csv(outpath + '/' + fdir + '/' + attr + '_quart.txt')
+            month_df.to_csv(outpath + '/' + fdir + '/' + attr + '_month.txt')
 
 
 attr_list = ['stargazers', 'forks', 'comments', 'commits', 'issues', 'pulls', 'tags']

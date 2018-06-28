@@ -122,11 +122,11 @@ data_Y = data[:, -1]
 data_x_norm = preprocessing.normalize(data_X, norm='l2', axis=0)
 
 # 模型选择
-reg = linear_model.Ridge(alpha=.5)
-#reg = linear_model.LinearRegression()
+#reg = linear_model.Ridge(alpha=.5)
+reg = linear_model.LinearRegression()
 
 # 交叉验证
-n_splits = 5
+n_splits = 10
 ss = ShuffleSplit(n_splits=n_splits, test_size=0.1,random_state=5)
 MSE_SUM = 0.0
 MAE_SUM = 0.0

@@ -64,7 +64,7 @@ data_X = data[:, :-1]
 data_Y = data[:, -1]
 
 n_splits = 10
-ss = ShuffleSplit(n_splits=n_splits, test_size=0.1, random_state=5)
+ss = ShuffleSplit(n_splits=n_splits, test_size=0.1, random_state=7)
 MSE_SUM = 0.0
 MAE_SUM = 0.0
 param = {'max_depth': 2, 'eta': 1, 'silent': 1, 'objective': 'reg:linear'}
